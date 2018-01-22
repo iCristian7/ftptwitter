@@ -6,32 +6,18 @@
     android:layout_height="match_parent"
     tools:context="fempa.es.ftptwitter.MainActivity">
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginTop="14dp"
-            android:text="@string/informarcion_acerca_aplicacon"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <Button
-            android:id="@+id/btnSubir"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/textView1"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="136dp"
-            android:text="@string/subir_archivo" />
-
-         <EditText
-             android:id="@+id/edtxtNombreArchivo"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:layout_below="@+id/textView1"
-             android:layout_centerHorizontal="true"
-             android:layout_marginTop="67dp"
-             android:ems="10"
-             android:hint="@string/nombre_del_archivo" />
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="272dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:onClick="comprobarPuntuacion"
+        android:text="Comprobar puntuación"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.443"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
