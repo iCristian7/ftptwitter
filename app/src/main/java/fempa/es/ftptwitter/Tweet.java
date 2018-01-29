@@ -21,7 +21,7 @@ public class Tweet extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView txtTitulo = (TextView) findViewById(R.id.textView4);
+        TextView txtTitulo = (TextView) findViewById(R.id.textView1);
     }
 
 
