@@ -9,7 +9,10 @@ import android.widget.TextView;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -20,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private static TextView texto;
     private int puntuacionLocal=0;
     private   OutputStream output=null;
+    private EditText puntos;
     private boolean b;
     private boolean a;
 
@@ -28,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        EditText puntos=(EditText)findViewById(R.id.puntuacion);
+        puntos=(EditText)findViewById(R.id.puntuacion);
         EditText usuario=(EditText)findViewById(R.id.usuario);
         texto=(TextView)findViewById(R.id.texto);
 
@@ -89,13 +93,39 @@ public class MainActivity extends AppCompatActivity {
 
                    cliente.retrieveFile("TheBest.txt", output);
 
-                } catch (MalformedURLException e) {
+                   Integer puntosFtp=Integer.parseInt(output.toString());
+                   Integer puntosLocal=Integer.parseInt(String.valueOf(puntos.getText()));
+
+
+                   if(puntosFtp<puntosLocal){
+
+                       File f=new File("TheBest.txt");
+                       //escribir f con la puntuacion
+                       InputStream in = new FileInputStream(f);
+
+                       byte[] buffer= new byte[256];
+                       while (true) {
+                           int n= in.read(buffer);
+                           if (n < 0)
+                               break;
+                           output.write(buffer, 0, n);
+                       }
+                       in.close();
+                       cliente.storeFile("TheBest.txt", in);
+
+                   }
+
+                   output.close();
+
+
+               } catch (MalformedURLException e) {
                     Log.w("", "MALFORMED URL EXCEPTION");
                 } catch (IOException e) {
                     Log.w(e.getMessage(), e);
                 }
 
-                Log.e("puntos", output.toString());
+                Log.e("puntos", String.valueOf(b));
+
 
                 try {
                     cliente.disconnect();
