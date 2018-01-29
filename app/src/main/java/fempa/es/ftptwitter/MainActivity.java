@@ -87,8 +87,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     };
 
-
-                   b = cliente.retrieveFile("TheBest.txt", output);
+                   cliente.retrieveFile("TheBest.txt", output);
 
                 } catch (MalformedURLException e) {
                     Log.w("", "MALFORMED URL EXCEPTION");
