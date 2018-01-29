@@ -1,11 +1,14 @@
 package fempa.es.ftptwitter;
 
 import android.os.Bundle;
+import android.support.annotation.MainThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.net.ftp.FTPClient;
 
@@ -33,7 +36,6 @@ import static java.lang.System.in;
 public class MainActivity extends AppCompatActivity {
 
     private static FTPClient cliente = null;
-    private static TextView texto;
     private Integer puntosLocal;
     private Integer puntosFtp;
     private OutputStream output = null;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean b;
     private boolean a;
     private EditText usuario;
+    private Button send;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +53,14 @@ public class MainActivity extends AppCompatActivity {
 
         puntos = (EditText) findViewById(R.id.puntuacion);
         usuario = (EditText) findViewById(R.id.usuario);
-        texto = (TextView) findViewById(R.id.texto);
+        send = (Button) findViewById(R.id.button);
 
 
     }
 
     public void comprobarPuntuacion(final View v) {
 
+        send.setEnabled(false);
 
         new Thread(new Runnable() {
 
@@ -111,17 +115,49 @@ public class MainActivity extends AppCompatActivity {
                      puntosFtp = Integer.parseInt(output.toString());
                      puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
                     //texto.setText(puntosLocal+" , "+puntosFtp);
-
+/*
+                    if(puntosLocal>999999999){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Por favor introduce un número más pequeño", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+*/
                     if (puntosFtp < puntosLocal) {
 
 
                         InputStream in = new ByteArrayInputStream( String.valueOf(puntosLocal).getBytes() );
 
-
-                        cliente.storeFile("TheBest.txt", in);
+                        try {
+                            cliente.storeFile("TheBest.txt", in);
+                        }catch (IOException e){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(), "Por favor introduce un número correcto", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                         configuracionTwitter(v);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "Enhorabuena, has conseguido la puntuación más alta! ;)", Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
 
                         in.close();
+                    }else{
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "JAJAJJAJA Menudo paquete, sigue jugando!", Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
                     }
 
 
@@ -145,12 +181,16 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                send.setEnabled(true);
             }
 
         }).start();
 
 
+        send.setEnabled(true);
+
     }
+
 
     public boolean ChangeDirectoryCreateIfNotExists(FTPClient mFtpClient, String directory) {
         try {
