@@ -9,38 +9,53 @@ import android.widget.TextView;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.conf.ConfigurationBuilder;
+
+import static java.lang.System.in;
+
 public class MainActivity extends AppCompatActivity {
 
-    private  static FTPClient cliente = null;
+    private static FTPClient cliente = null;
     private static TextView texto;
-    private int puntuacionLocal=0;
-    private   OutputStream output=null;
+    private Integer puntosLocal;
+    private Integer puntosFtp;
+    private OutputStream output = null;
+    private InputStream in = null;
     private EditText puntos;
     private boolean b;
     private boolean a;
+    private EditText usuario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        puntos=(EditText)findViewById(R.id.puntuacion);
-        EditText usuario=(EditText)findViewById(R.id.usuario);
-        texto=(TextView)findViewById(R.id.texto);
-
+        puntos = (EditText) findViewById(R.id.puntuacion);
+        usuario = (EditText) findViewById(R.id.usuario);
+        texto = (TextView) findViewById(R.id.texto);
 
 
     }
 
-    public void comprobarPuntuacion(View v)  {
+    public void comprobarPuntuacion(final View v) {
 
 
         new Thread(new Runnable() {
@@ -55,81 +70,78 @@ public class MainActivity extends AppCompatActivity {
                     cliente = new FTPClient();
                     cliente.setConnectTimeout(10 * 1000);
                     cliente.connect(InetAddress.getByName("31.170.165.160"));
-                    boolean login = cliente.login(usuarioFTP,passFTP);
-                    if(login){
-                        Log.e("login","Logeado");
-                        Log.e("directorio",cliente.printWorkingDirectory());
+                    boolean login = cliente.login(usuarioFTP, passFTP);
+                    if (login) {
+                        Log.e("login", "Logeado");
+                        Log.e("directorio", cliente.printWorkingDirectory());
 
-                    }else{
-                        Log.e("login","no Logeado");
+                    } else {
+                        Log.e("login", "no Logeado");
 
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-               try {
+                try {
 
-                   String directorio="Puntuations";
-                   ChangeDirectoryCreateIfNotExists(cliente,directorio);
-                   Log.e("directorio",cliente.printWorkingDirectory());
+                    String directorio = "Puntuations";
+                    ChangeDirectoryCreateIfNotExists(cliente, directorio);
+                    Log.e("directorio", cliente.printWorkingDirectory());
 
 
-
-                   output = new OutputStream()
+                    output = new OutputStream()
 
                     {
                         private StringBuilder string = new StringBuilder();
+
                         @Override
                         public void write(int b) throws IOException {
-                            this.string.append((char) b );
+                            this.string.append((char) b);
                         }
 
                         //Netbeans IDE automatically overrides this toString()
-                        public String toString(){
+                        public String toString() {
                             return this.string.toString();
                         }
                     };
 
-                   cliente.retrieveFile("TheBest.txt", output);
+                    cliente.retrieveFile("TheBest.txt", output);
 
-                   Integer puntosFtp=Integer.parseInt(output.toString());
-                   Integer puntosLocal=Integer.parseInt(String.valueOf(puntos.getText()));
+                     puntosFtp = Integer.parseInt(output.toString());
+                     puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
+                    //texto.setText(puntosLocal+" , "+puntosFtp);
 
-
-                   if(puntosFtp<puntosLocal){
-
-                       File f=new File("TheBest.txt");
-                       //escribir f con la puntuacion
-                       InputStream in = new FileInputStream(f);
-
-                       byte[] buffer= new byte[256];
-                       while (true) {
-                           int n= in.read(buffer);
-                           if (n < 0)
-                               break;
-                           output.write(buffer, 0, n);
-                       }
-                       in.close();
-                       cliente.storeFile("TheBest.txt", in);
-
-                   }
-
-                   output.close();
+                    if (puntosFtp < puntosLocal) {
 
 
-               } catch (MalformedURLException e) {
+                        InputStream in = new ByteArrayInputStream( String.valueOf(puntosLocal).getBytes() );
+
+
+                        cliente.storeFile("TheBest.txt", in);
+                        configuracionTwitter(v);
+
+                        in.close();
+                    }
+
+
+
+                } catch (MalformedURLException e) {
                     Log.w("", "MALFORMED URL EXCEPTION");
                 } catch (IOException e) {
                     Log.w(e.getMessage(), e);
                 }
 
-                Log.e("puntos", String.valueOf(b));
-
+                Log.e("puntos", String.valueOf(output));
+                Log.e("puntos2", String.valueOf(puntosLocal+"  "+puntosFtp));
 
                 try {
                     cliente.disconnect();
                     //cliente.logout();
+                   // in.close();
+                    output.close();
+
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -155,5 +167,25 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
+
+    public void configuracionTwitter(View v){
+
+                ConfigurationBuilder cb = new ConfigurationBuilder();
+                cb.setDebugEnabled(true)
+                        .setOAuthConsumerKey("AaQE5hN3wD620RKQwHueTcyIX")
+                        .setOAuthConsumerSecret("UTpAwKBfXnmKtZan51Ouhj0ff7cyefH5mHSKXGu0Zzei7qFZh5")
+                        .setOAuthAccessToken("957267757019656192-4xeh9wk1INdFYkLyhktktPjrFwG04Zw")
+                        .setOAuthAccessTokenSecret("aQVbRH7TPkRjToxDTiLG7Hey3Xcnr9cct45cgWc3zphQS");
+                TwitterFactory tf = new TwitterFactory(cb.build());
+                Twitter twitter = tf.getInstance();
+                Status status = null;
+                try {
+                    status = twitter.updateStatus("@"+usuario.getText().toString()+" Ha conseguido la nueva puntuación máxima "+puntosLocal+" puntos!!");
+                } catch (TwitterException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Successfully updated the status to [" + status.getText() + "].");
+            }
+
 
 }
