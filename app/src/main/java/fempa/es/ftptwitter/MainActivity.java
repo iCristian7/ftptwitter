@@ -1,16 +1,24 @@
 package fempa.es.ftptwitter;
 
 import android.os.Bundle;
+import android.support.annotation.MainThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,10 +31,11 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
+import static java.lang.System.in;
+
 public class MainActivity extends AppCompatActivity {
 
     private static FTPClient cliente = null;
-    private static TextView texto;
     private Integer puntosLocal;
     private Integer puntosFtp;
     private OutputStream output = null;
@@ -44,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
         puntos = (EditText) findViewById(R.id.puntuacion);
         usuario = (EditText) findViewById(R.id.usuario);
-        send=(Button)findViewById(R.id.button);
+        send = (Button) findViewById(R.id.button);
 
 
     }
@@ -52,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     public void comprobarPuntuacion(final View v) {
 
         send.setEnabled(false);
+
         new Thread(new Runnable() {
 
             @Override
@@ -102,18 +112,54 @@ public class MainActivity extends AppCompatActivity {
 
                     cliente.retrieveFile("TheBest.txt", output);
 
-                    puntosFtp = Integer.parseInt(output.toString());
-                    puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
+                     puntosFtp = Integer.parseInt(output.toString());
+                     puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
                     //texto.setText(puntosLocal+" , "+puntosFtp);
-
+/*
+                    if(puntosLocal>999999999){
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Por favor introduce un número más pequeño", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+*/
                     if (puntosFtp < puntosLocal) {
 
-                        InputStream in = new ByteArrayInputStream(String.valueOf(puntosLocal).getBytes());
-                        cliente.storeFile("TheBest.txt", in);
+
+                        InputStream in = new ByteArrayInputStream( String.valueOf(puntosLocal).getBytes() );
+
+                        try {
+                            cliente.storeFile("TheBest.txt", in);
+                        }catch (IOException e){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(), "Por favor introduce un número correcto", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                         configuracionTwitter(v);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "Enhorabuena, has conseguido la puntuación más alta! ;)", Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
 
                         in.close();
+                    }else{
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "JAJAJJAJA Menudo paquete, sigue jugando!", Toast.LENGTH_SHORT).show();
+
+                            }
+                        });
                     }
+
 
 
                 } catch (MalformedURLException e) {
@@ -123,23 +169,28 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Log.e("puntos", String.valueOf(output));
-                Log.e("puntos2", String.valueOf(puntosLocal + "  " + puntosFtp));
+                Log.e("puntos2", String.valueOf(puntosLocal+"  "+puntosFtp));
 
                 try {
                     cliente.disconnect();
+                    //cliente.logout();
+                   // in.close();
                     output.close();
 
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                send.setEnabled(true);
             }
 
         }).start();
 
+
         send.setEnabled(true);
 
     }
+
 
     public boolean ChangeDirectoryCreateIfNotExists(FTPClient mFtpClient, String directory) {
         try {
@@ -157,24 +208,24 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    public void configuracionTwitter(View v) {
+    public void configuracionTwitter(View v){
 
-        ConfigurationBuilder cb = new ConfigurationBuilder();
-        cb.setDebugEnabled(true)
-                .setOAuthConsumerKey("AaQE5hN3wD620RKQwHueTcyIX")
-                .setOAuthConsumerSecret("UTpAwKBfXnmKtZan51Ouhj0ff7cyefH5mHSKXGu0Zzei7qFZh5")
-                .setOAuthAccessToken("957267757019656192-4xeh9wk1INdFYkLyhktktPjrFwG04Zw")
-                .setOAuthAccessTokenSecret("aQVbRH7TPkRjToxDTiLG7Hey3Xcnr9cct45cgWc3zphQS");
-        TwitterFactory tf = new TwitterFactory(cb.build());
-        Twitter twitter = tf.getInstance();
-        Status status = null;
-        try {
-            status = twitter.updateStatus("@" + usuario.getText().toString() + " Ha conseguido la nueva puntuación máxima " + puntosLocal + " puntos!!");
-        } catch (TwitterException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Successfully updated the status to [" + status.getText() + "].");
-    }
+                ConfigurationBuilder cb = new ConfigurationBuilder();
+                cb.setDebugEnabled(true)
+                        .setOAuthConsumerKey("AaQE5hN3wD620RKQwHueTcyIX")
+                        .setOAuthConsumerSecret("UTpAwKBfXnmKtZan51Ouhj0ff7cyefH5mHSKXGu0Zzei7qFZh5")
+                        .setOAuthAccessToken("957267757019656192-4xeh9wk1INdFYkLyhktktPjrFwG04Zw")
+                        .setOAuthAccessTokenSecret("aQVbRH7TPkRjToxDTiLG7Hey3Xcnr9cct45cgWc3zphQS");
+                TwitterFactory tf = new TwitterFactory(cb.build());
+                Twitter twitter = tf.getInstance();
+                Status status = null;
+                try {
+                    status = twitter.updateStatus("@"+usuario.getText().toString()+" Ha conseguido la nueva puntuación máxima "+puntosLocal+" puntos!!");
+                } catch (TwitterException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Successfully updated the status to [" + status.getText() + "].");
+            }
 
 
 }
