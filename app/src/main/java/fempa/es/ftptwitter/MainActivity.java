@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     private  static FTPClient cliente = null;
     private static TextView texto;
     private int puntuacionLocal=0;
+    private   OutputStream output=null;
     private boolean b;
     private boolean a;
 
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-                   OutputStream output = new OutputStream()
+                   output = new OutputStream()
 
                     {
                         private StringBuilder string = new StringBuilder();
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.w(e.getMessage(), e);
                 }
 
-                Log.e("puntos", String.valueOf(b));
+                Log.e("puntos", output.toString());
 
                 try {
                     cliente.disconnect();
