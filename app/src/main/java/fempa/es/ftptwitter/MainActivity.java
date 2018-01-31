@@ -1,24 +1,17 @@
 package fempa.es.ftptwitter;
 
 import android.os.Bundle;
-import android.support.annotation.MainThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,8 +23,6 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
-
-import static java.lang.System.in;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -50,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         puntos = (EditText) findViewById(R.id.puntuacion);
         usuario = (EditText) findViewById(R.id.usuario);
@@ -60,132 +53,136 @@ public class MainActivity extends AppCompatActivity {
 
     public void comprobarPuntuacion(final View v) {
 
+
         send.setEnabled(false);
 
-        new Thread(new Runnable() {
 
-            @Override
-            public void run() {
+       if(!puntos.getText().toString().isEmpty() && !usuario.getText().toString().isEmpty()) {
 
-                String usuarioFTP = "u354500985.fempaalumnos";
-                String passFTP = "AlumnosFempa";
+           new Thread(new Runnable() {
 
-                try {
-                    cliente = new FTPClient();
-                    cliente.setConnectTimeout(10 * 1000);
-                    cliente.connect(InetAddress.getByName("31.170.165.160"));
-                    boolean login = cliente.login(usuarioFTP, passFTP);
-                    if (login) {
-                        Log.e("login", "Logeado");
-                        Log.e("directorio", cliente.printWorkingDirectory());
+               @Override
+               public void run() {
 
-                    } else {
-                        Log.e("login", "no Logeado");
+                   String usuarioFTP = "u354500985.fempaalumnos";
+                   String passFTP = "AlumnosFempa";
 
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                   try {
+                       cliente = new FTPClient();
+                       cliente.setConnectTimeout(10 * 1000);
+                       cliente.connect(InetAddress.getByName("31.170.165.160"));
+                       boolean login = cliente.login(usuarioFTP, passFTP);
+                       if (login) {
+                           Log.e("login", "Logeado");
+                           Log.e("directorio", cliente.printWorkingDirectory());
 
-                try {
+                       } else {
+                           Log.e("login", "no Logeado");
 
-                    String directorio = "Puntuations";
-                    ChangeDirectoryCreateIfNotExists(cliente, directorio);
-                    Log.e("directorio", cliente.printWorkingDirectory());
+                       }
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
 
+                   try {
 
-                    output = new OutputStream()
-
-                    {
-                        private StringBuilder string = new StringBuilder();
-
-                        @Override
-                        public void write(int b) throws IOException {
-                            this.string.append((char) b);
-                        }
-
-                        //Netbeans IDE automatically overrides this toString()
-                        public String toString() {
-                            return this.string.toString();
-                        }
-                    };
-
-                    cliente.retrieveFile("TheBest.txt", output);
-
-                     puntosFtp = Integer.parseInt(output.toString());
-                     puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
-                    //texto.setText(puntosLocal+" , "+puntosFtp);
-/*
-                    if(puntosLocal>999999999){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Por favor introduce un número más pequeño", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-*/
-                    if (puntosFtp < puntosLocal) {
+                       String directorio = "Puntuations";
+                       ChangeDirectoryCreateIfNotExists(cliente, directorio);
+                       Log.e("directorio", cliente.printWorkingDirectory());
 
 
-                        InputStream in = new ByteArrayInputStream( String.valueOf(puntosLocal).getBytes() );
+                       output = new OutputStream()
 
-                        try {
-                            cliente.storeFile("TheBest.txt", in);
-                        }catch (IOException e){
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(getApplicationContext(), "Por favor introduce un número correcto", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }
-                        configuracionTwitter(v);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "Enhorabuena, has conseguido la puntuación más alta! ;)", Toast.LENGTH_SHORT).show();
+                       {
+                           private StringBuilder string = new StringBuilder();
 
-                            }
-                        });
+                           @Override
+                           public void write(int b) throws IOException {
+                               this.string.append((char) b);
+                           }
 
-                        in.close();
-                    }else{
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "JAJAJJAJA Menudo paquete, sigue jugando!", Toast.LENGTH_SHORT).show();
+                           //Netbeans IDE automatically overrides this toString()
+                           public String toString() {
+                               return this.string.toString();
+                           }
+                       };
 
-                            }
-                        });
-                    }
+                       cliente.retrieveFile("TheBest.txt", output);
+
+                       puntosFtp = Integer.parseInt(output.toString());
+                       puntosLocal = Integer.parseInt(String.valueOf(puntos.getText()));
+                       //texto.setText(puntosLocal+" , "+puntosFtp);
+
+                       if (puntosFtp < puntosLocal) {
 
 
+                           InputStream in = new ByteArrayInputStream(String.valueOf(puntosLocal).getBytes());
 
-                } catch (MalformedURLException e) {
-                    Log.w("", "MALFORMED URL EXCEPTION");
-                } catch (IOException e) {
-                    Log.w(e.getMessage(), e);
-                }
+                           try {
+                               cliente.storeFile("TheBest.txt", in);
+                           } catch (IOException e) {
+                               runOnUiThread(new Runnable() {
+                                   @Override
+                                   public void run() {
+                                       Toast.makeText(getApplicationContext(), "Por favor introduce un número correcto", Toast.LENGTH_SHORT).show();
+                                   }
+                               });
+                           }
+                           configuracionTwitter(v);
+                           runOnUiThread(new Runnable() {
+                               @Override
+                               public void run() {
+                                   Toast.makeText(MainActivity.this, "Enhorabuena, has conseguido la puntuación más alta! ;)", Toast.LENGTH_SHORT).show();
 
-                Log.e("puntos", String.valueOf(output));
-                Log.e("puntos2", String.valueOf(puntosLocal+"  "+puntosFtp));
+                               }
+                           });
 
-                try {
-                    cliente.disconnect();
-                    //cliente.logout();
-                   // in.close();
-                    output.close();
+                           in.close();
+                       } else {
+                           runOnUiThread(new Runnable() {
+                               @Override
+                               public void run() {
+                                   Toast.makeText(MainActivity.this, "JAJAJJAJA Menudo paquete, sigue jugando!", Toast.LENGTH_SHORT).show();
+
+                               }
+                           });
+                       }
 
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                send.setEnabled(true);
-            }
+                   } catch (MalformedURLException e) {
+                       Log.w("", "MALFORMED URL EXCEPTION");
+                   } catch (IOException e) {
+                       Log.w(e.getMessage(), e);
+                   }
 
-        }).start();
+                   Log.e("puntos", String.valueOf(output));
+                   Log.e("puntos2", String.valueOf(puntosLocal + "  " + puntosFtp));
 
+                   try {
+                       cliente.disconnect();
+                       //cliente.logout();
+                       // in.close();
+                       output.close();
+
+
+                   } catch (IOException e) {
+                       e.printStackTrace();
+                   }
+                   send.setEnabled(true);
+               }
+
+           }).start();
+
+       }else{
+           runOnUiThread(new Runnable() {
+               @Override
+               public void run() {
+                   Toast.makeText(MainActivity.this, "Los campos usuario y puntos son obligatorios", Toast.LENGTH_SHORT).show();
+
+               }
+           });
+
+       }
 
         send.setEnabled(true);
 
